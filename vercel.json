@@ -1,15 +1,8 @@
 {
-  "buildCommand": "prisma generate && prisma migrate deploy && next build",
+  "buildCommand": "prisma generate && next build",
   "outputDirectory": ".next",
   "framework": "nextjs",
   "installCommand": "npm install",
-  "env": {
-    "DATABASE_URL": "@database_url",
-    "SHOPIFY_STORE_DOMAIN": "@shopify_store_domain",
-    "SHOPIFY_ACCESS_TOKEN": "@shopify_access_token",
-    "NEXTAUTH_URL": "@nextauth_url",
-    "NEXTAUTH_SECRET": "@nextauth_secret"
-  },
   "headers": [
     {
       "source": "/(.*)",

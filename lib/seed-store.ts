@@ -7,13 +7,15 @@ export async function seedDefaultStore() {
       where: { domain: process.env.SHOPIFY_STORE_DOMAIN || '' },
     });
 
-    if (!existingStore && process.env.SHOPIFY_STORE_DOMAIN && process.env.SHOPIFY_ADMIN_API_ACCESS_TOKEN) {
+    if (!existingStore && process.env.SHOPIFY_STORE_DOMAIN && process.env.SHOPIFY_ACCESS_TOKEN) {
       // Create default store from environment variables
       const defaultStore = await prisma.store.create({
         data: {
           name: 'Default Store',
           domain: process.env.SHOPIFY_STORE_DOMAIN,
-          accessToken: process.env.SHOPIFY_ADMIN_API_ACCESS_TOKEN,
+          accessToken: process.env.SHOPIFY_ACCESS_TOKEN,
+          platform: 'shopify', // Explicitly set platform
+          isActive: true
         },
       });
       
