@@ -7,7 +7,7 @@ export class ShopifyClient {
 
   constructor() {
     this.storeDomain = process.env.SHOPIFY_STORE_DOMAIN || '';
-    this.accessToken = process.env.SHOPIFY_ADMIN_API_ACCESS_TOKEN || '';
+    this.accessToken = process.env.SHOPIFY_ACCESS_TOKEN || '';
     this.apiVersion = process.env.SHOPIFY_API_VERSION || '2024-10';
 
     if (!this.storeDomain || !this.accessToken) {
