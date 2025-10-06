@@ -1,9 +1,34 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import { execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
 
 export async function POST(request: Request) {
   try {
+    // Ensure database exists
+    try {
+      const dbPath = path.join(process.cwd(), 'prisma', 'database.db');
+      if (!fs.existsSync(path.dirname(dbPath))) {
+        fs.mkdirSync(path.dirname(dbPath), { recursive: true });
+      }
+      
+      // Try to initialize database if needed
+      if (!fs.existsSync(dbPath)) {
+        console.log('Initializing database...');
+        try {
+          execSync('npx prisma db push --skip-generate', {
+            env: { ...process.env, DATABASE_URL: 'file:./prisma/database.db' }
+          });
+        } catch (e) {
+          console.log('Database initialization warning:', e);
+        }
+      }
+    } catch (dbError) {
+      console.error('Database setup error:', dbError);
+    }
+
     const { name, domain, platform, accessToken, consumerKey, consumerSecret } = await request.json();
 
     // Validate input

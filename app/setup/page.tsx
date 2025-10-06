@@ -59,7 +59,8 @@ export default function SetupPage() {
         }, 2000);
       } else {
         const error = await storeRes.json();
-        alert('Setup failed: ' + (error.message || 'Unknown error'));
+        console.error('Setup failed:', error);
+        alert('Setup failed: ' + (error.error || error.details || error.message || 'Unknown error. Check console for details.'));
       }
     } catch (error) {
       alert('Setup error: ' + error);

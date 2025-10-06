@@ -1,19 +1,27 @@
 import { redirect } from 'next/navigation';
 import { verifyAuth } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
 
 export default async function HomePage() {
-  // Check if initial setup is needed
-  try {
-    const storeCount = await prisma.store.count();
-    if (storeCount === 0) {
-      redirect('/setup');
-      return;
+  // Check if we have Shopify credentials in environment
+  const hasShopifyConfig = process.env.SHOPIFY_STORE_DOMAIN && process.env.SHOPIFY_ACCESS_TOKEN;
+  
+  // If no config at all, go to setup
+  if (!hasShopifyConfig) {
+    // Try to check database for stores
+    try {
+      const { prisma } = await import('@/lib/prisma');
+      const storeCount = await prisma.store.count();
+      if (storeCount === 0) {
+        redirect('/setup');
+        return;
+      }
+    } catch (error) {
+      // Database issue, but if we have env config, continue
+      if (!hasShopifyConfig) {
+        redirect('/setup');
+        return;
+      }
     }
-  } catch (error) {
-    // Database not initialized, go to setup
-    redirect('/setup');
-    return;
   }
   
   const isAuthenticated = await verifyAuth();
