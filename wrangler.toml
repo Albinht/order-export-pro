@@ -1,0 +1,25 @@
+name = "order-export-pro"
+compatibility_date = "2024-01-01"
+pages_build_output_dir = ".vercel/output/static"
+
+# Environment variables (set deze in Cloudflare dashboard)
+[vars]
+NODE_ENV = "production"
+
+# Voor database (Turso of D1)
+[[d1_databases]]
+binding = "DB"
+database_name = "order-export"
+database_id = "your-database-id"
+
+# Voor caching
+[[kv_namespaces]]
+binding = "CACHE"
+id = "your-kv-namespace-id"
+
+# Build configuratie
+[build]
+command = "npm run build:cloudflare"
+
+[build.upload]
+format = "service-worker"

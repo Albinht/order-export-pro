@@ -1,0 +1,65 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Store {
+  id             String   @id @default(cuid())
+  name           String
+  domain         String   @unique
+  platform       String   @default("shopify") // shopify or woocommerce
+  accessToken    String?  // For Shopify
+  consumerKey    String?  // For WooCommerce
+  consumerSecret String?  // For WooCommerce
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  exports     ExportHistory[]
+  orderStatus OrderStatus[]
+}
+
+model ExportHistory {
+  id           String   @id @default(cuid())
+  storeId      String
+  store        Store    @relation(fields: [storeId], references: [id])
+  filename     String
+  orderCount   Int
+  orderIds     String   // JSON array of order IDs
+  exportedBy   String   @default("user")
+  exportedAt   DateTime @default(now())
+  metadata     String?  // JSON object for extra data
+}
+
+model OrderStatus {
+  id              String   @id @default(cuid())
+  storeId         String
+  store           Store    @relation(fields: [storeId], references: [id])
+  orderId         String
+  orderNumber     String
+  status          String   // processing, fulfilled, shipped, delivered
+  fulfillmentId   String?
+  trackingNumber  String?
+  trackingCompany String?
+  notes           String?
+  updatedAt       DateTime @updatedAt
+  createdAt       DateTime @default(now())
+  
+  @@unique([storeId, orderId])
+}
+
+// Simplified auth for 2 users only
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}

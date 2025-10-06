@@ -1,0 +1,22 @@
+{
+  "name": "Order Export Pro",
+  "short_name": "OrderExport",
+  "description": "Professional order management and export tool",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "theme_color": "#1e5fff",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "start_url": "/"
+}

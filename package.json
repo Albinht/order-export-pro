@@ -1,0 +1,52 @@
+{
+  "name": "shopify-order-export",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "prisma generate && next build",
+    "build:cloudflare": "next build && npx @cloudflare/next-on-pages",
+    "preview:cloudflare": "npx wrangler pages dev .vercel/output/static",
+    "start": "next start",
+    "postinstall": "prisma generate",
+    "migrate:dev": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
+    "deploy:cloudflare": "npx wrangler pages deploy .vercel/output/static"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.16.3",
+    "@shopify/admin-api-client": "^1.1.1",
+    "@shopify/shopify-api": "^12.0.0",
+    "@tanstack/react-query": "^5.90.2",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/qrcode": "^1.5.5",
+    "@types/speakeasy": "^2.0.10",
+    "axios": "^1.12.2",
+    "bcryptjs": "^3.0.2",
+    "date-fns": "^4.1.0",
+    "dotenv": "^17.2.3",
+    "exceljs": "^4.4.0",
+    "file-saver": "^2.0.5",
+    "lucide-react": "^0.544.0",
+    "next": "15.5.4",
+    "prisma": "^6.16.3",
+    "qrcode": "^1.5.4",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-hot-toast": "^2.6.0",
+    "speakeasy": "^2.0.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@cloudflare/next-on-pages": "^1.13.16",
+    "@tailwindcss/postcss": "^4.1.14",
+    "@types/file-saver": "^2.0.7",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "autoprefixer": "^10.4.21",
+    "tailwindcss": "^4.1.14",
+    "typescript": "^5",
+    "wrangler": "^4.42.0"
+  }
+}

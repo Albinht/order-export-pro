@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Background Circle -->
+  <rect width="32" height="32" rx="6" fill="#1e5fff"/>
+  
+  <!-- Package Icon (simplified) -->
+  <g fill="white">
+    <!-- Box base -->
+    <path d="M8 14v10a2 2 0 002 2h12a2 2 0 002-2V14" stroke="white" stroke-width="1.5" fill="none"/>
+    
+    <!-- Box top -->
+    <path d="M24 14l-8-5-8 5" stroke="white" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
+    
+    <!-- Front line -->
+    <path d="M16 9v15" stroke="white" stroke-width="1.5"/>
+    
+    <!-- Export arrow -->
+    <path d="M12 18l4-4 4 4" stroke="#ff6b00" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M16 14v8" stroke="#ff6b00" stroke-width="2" stroke-linecap="round"/>
+  </g>
+</svg>
