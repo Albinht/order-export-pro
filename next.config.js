@@ -1,13 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Voor Cloudflare Pages
-  experimental: {
-    runtime: 'nodejs', // We gebruiken @cloudflare/next-on-pages adapter
-  },
-  
-  // Optimalisaties voor edge
-  swcMinify: true,
-  
   // Image optimization uitschakelen voor Cloudflare
   images: {
     unoptimized: true,
