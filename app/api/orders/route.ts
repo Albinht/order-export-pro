@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ShopifyClient } from '@/lib/shopify/client';
-import { createPlatformClient } from '@/lib/platform-client';
+import { createPlatformClient, PlatformClient } from '@/lib/platform-client';
 import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate');
     const storeId = searchParams.get('storeId');
 
-    let client;
+    let client: PlatformClient | ShopifyClient;
     
     if (storeId) {
       // Use specific store

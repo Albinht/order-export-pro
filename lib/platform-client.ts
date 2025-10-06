@@ -4,8 +4,9 @@ import { MultiStoreShopifyClient } from './shopify/multi-store-client';
 import { WooCommerceClient } from './woocommerce/client';
 
 export interface PlatformClient {
-  getOrders(limit?: number): Promise<ShopifyOrder[]>;
-  getProductImage(productId: string): Promise<string | null>;
+  fetchOrders(limit?: number): Promise<ShopifyOrder[]>;
+  fetchOrdersWithDateRange(startDate: Date, endDate: Date): Promise<ShopifyOrder[]>;
+  fetchProductImage(productId: string): Promise<string | null>;
   fulfillOrder(orderId: string): Promise<any>;
 }
 

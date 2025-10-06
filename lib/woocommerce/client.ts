@@ -108,32 +108,23 @@ export class WooCommerceClient {
       id: wcOrder.id.toString(),
       name: `#${wcOrder.number}`,
       email: wcOrder.billing?.email || '',
+      phone: wcOrder.billing?.phone || '',
       created_at: wcOrder.date_created,
-      updated_at: wcOrder.date_modified,
       total_price: wcOrder.total,
-      subtotal_price: wcOrder.total,
-      total_tax: wcOrder.total_tax,
       currency: wcOrder.currency,
       financial_status: wcOrder.status === 'processing' ? 'paid' : 'pending',
       fulfillment_status: wcOrder.status === 'completed' ? 'fulfilled' : null,
-      order_number: wcOrder.number,
-      note: wcOrder.customer_note || '',
-      tags: '',
       
       // Customer info
       customer: {
-        id: wcOrder.customer_id?.toString() || '0',
         email: wcOrder.billing?.email || '',
         first_name: wcOrder.billing?.first_name || '',
         last_name: wcOrder.billing?.last_name || '',
-        phone: wcOrder.billing?.phone || '',
-        tags: '',
+        phone: wcOrder.billing?.phone || ''
       },
       
       // Shipping address
       shipping_address: {
-        first_name: wcOrder.shipping?.first_name || wcOrder.billing?.first_name || '',
-        last_name: wcOrder.shipping?.last_name || wcOrder.billing?.last_name || '',
         address1: wcOrder.shipping?.address_1 || wcOrder.billing?.address_1 || '',
         address2: wcOrder.shipping?.address_2 || wcOrder.billing?.address_2 || '',
         city: wcOrder.shipping?.city || wcOrder.billing?.city || '',
@@ -141,53 +132,21 @@ export class WooCommerceClient {
         country: wcOrder.shipping?.country || wcOrder.billing?.country || '',
         zip: wcOrder.shipping?.postcode || wcOrder.billing?.postcode || '',
         phone: wcOrder.billing?.phone || '',
-        name: `${wcOrder.shipping?.first_name || wcOrder.billing?.first_name || ''} ${wcOrder.shipping?.last_name || wcOrder.billing?.last_name || ''}`.trim(),
-        company: wcOrder.shipping?.company || wcOrder.billing?.company || '',
-        country_code: wcOrder.shipping?.country || wcOrder.billing?.country || '',
-        province_code: wcOrder.shipping?.state || wcOrder.billing?.state || '',
-      },
-      
-      // Billing address
-      billing_address: {
-        first_name: wcOrder.billing?.first_name || '',
-        last_name: wcOrder.billing?.last_name || '',
-        address1: wcOrder.billing?.address_1 || '',
-        address2: wcOrder.billing?.address_2 || '',
-        city: wcOrder.billing?.city || '',
-        province: wcOrder.billing?.state || '',
-        country: wcOrder.billing?.country || '',
-        zip: wcOrder.billing?.postcode || '',
-        phone: wcOrder.billing?.phone || '',
-        name: `${wcOrder.billing?.first_name || ''} ${wcOrder.billing?.last_name || ''}`.trim(),
-        company: wcOrder.billing?.company || '',
-        country_code: wcOrder.billing?.country || '',
-        province_code: wcOrder.billing?.state || '',
+        name: `${wcOrder.shipping?.first_name || wcOrder.billing?.first_name || ''} ${wcOrder.shipping?.last_name || wcOrder.billing?.last_name || ''}`.trim()
       },
       
       // Line items
       line_items: wcOrder.line_items?.map((item: any) => ({
         id: item.id?.toString() || '',
         title: item.name || '',
+        variant_title: this.extractVariantTitle(item), // This will be the size
         quantity: item.quantity || 0,
         price: item.price || '0',
-        sku: item.sku || '',
-        vendor: '',
+        sku: item.sku || null,
         product_id: item.product_id?.toString() || '',
-        variant_id: item.variation_id?.toString() || '',
-        variant_title: this.extractVariantTitle(item), // This will be the size
-        fulfillable_quantity: item.quantity || 0,
-        fulfillment_status: null,
-        properties: this.extractProperties(item), // This includes colors, frame type, etc.
-      })) || [],
-      
-      // Shipping lines
-      shipping_lines: wcOrder.shipping_lines?.map((line: any) => ({
-        id: line.id?.toString() || '',
-        title: line.method_title || '',
-        price: line.total || '0',
-        code: line.method_id || '',
-        source: 'woocommerce',
-      })) || [],
+        variant_id: item.variation_id?.toString() || item.product_id?.toString() || '',
+        properties: this.extractProperties(item) // This includes colors, frame type, etc.
+      })) || []
     };
   }
 

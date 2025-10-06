@@ -65,8 +65,7 @@ export async function initDatabase() {
       await prisma.user.create({
         data: {
           username: 'admin',
-          passwordHash: '$2a$10$K7L1OJ1/TFy8h5h4hM3PzuKPJK0J0J0J0J0J0J0J0J0J0J0J0J0J0', // 1n$$2O%n2$f2
-          role: 'admin'
+          passwordHash: '$2a$10$K7L1OJ1/TFy8h5h4hM3PzuKPJK0J0J0J0J0J0J0J0J0J0J0J0J0J0' // 1n$$2O%n2$f2
         }
       });
       console.log('✅ Default admin user created!');

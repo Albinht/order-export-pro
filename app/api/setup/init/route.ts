@@ -51,8 +51,7 @@ export async function POST(request: Request) {
       await prisma.user.create({
         data: {
           username: 'admin',
-          passwordHash: hashedPassword,
-          role: 'admin'
+          passwordHash: hashedPassword
         }
       });
     }

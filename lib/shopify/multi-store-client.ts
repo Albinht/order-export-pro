@@ -8,7 +8,7 @@ export class MultiStoreShopifyClient {
 
   constructor(store: Store) {
     this.storeDomain = store.domain;
-    this.accessToken = store.accessToken;
+    this.accessToken = store.accessToken || '';
     // Try 2023-10 API version for better compatibility with older stores
     this.apiVersion = process.env.SHOPIFY_API_VERSION || '2023-10';
 
