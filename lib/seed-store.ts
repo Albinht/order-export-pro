@@ -2,12 +2,17 @@ import { prisma } from './prisma';
 
 export async function seedDefaultStore() {
   try {
+    // Only try to seed if environment variables are set
+    if (!process.env.SHOPIFY_STORE_DOMAIN || !process.env.SHOPIFY_ACCESS_TOKEN) {
+      return null;
+    }
+    
     // Check if default store already exists
-    const existingStore = await prisma.store.findUnique({
-      where: { domain: process.env.SHOPIFY_STORE_DOMAIN || '' },
+    const existingStore = await prisma.store.findFirst({
+      where: { domain: process.env.SHOPIFY_STORE_DOMAIN },
     });
 
-    if (!existingStore && process.env.SHOPIFY_STORE_DOMAIN && process.env.SHOPIFY_ACCESS_TOKEN) {
+    if (!existingStore) {
       // Create default store from environment variables
       const defaultStore = await prisma.store.create({
         data: {

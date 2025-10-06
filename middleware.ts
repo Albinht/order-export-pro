@@ -4,8 +4,14 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   const session = request.cookies.get('auth-session');
   const isAuthPage = request.nextUrl.pathname === '/login';
+  const isSetupPage = request.nextUrl.pathname === '/setup';
   const isDashboardPage = request.nextUrl.pathname.startsWith('/dashboard');
   const isApiRoute = request.nextUrl.pathname.startsWith('/api');
+  
+  // Allow setup pages and APIs
+  if (isSetupPage || request.nextUrl.pathname.startsWith('/api/setup')) {
+    return NextResponse.next();
+  }
   
   // Skip API routes (except auth endpoints)
   if (isApiRoute && !request.nextUrl.pathname.startsWith('/api/auth')) {
