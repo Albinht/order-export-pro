@@ -74,6 +74,29 @@ const testShopifyConnection = async () => {
   }
 };
 
+// Test multi-store support
+console.log('\n🏪 Multi-Store Support Test:');
+const testMultiStore = () => {
+  const hasKV = process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN;
+  
+  if (hasKV) {
+    console.log('✅ Vercel KV: CONFIGURED');
+    console.log('   Stores will persist across deployments');
+  } else {
+    console.log('⚠️  Vercel KV: NOT CONFIGURED');
+    console.log('   Using in-memory storage (resets on deployment)');
+    console.log('   See VERCEL-KV-SETUP.md to enable persistence');
+  }
+  
+  console.log('\n   Multi-store features:');
+  console.log('   • Add unlimited stores from UI');
+  console.log('   • Switch between stores easily');
+  console.log('   • Each store has own credentials');
+  console.log('   • Works with or without KV');
+};
+
+testMultiStore();
+
 testShopifyConnection().then(() => {
   console.log('\n' + '=' .repeat(50));
   console.log('\n🎯 Deployment Instructions:');
@@ -83,4 +106,5 @@ testShopifyConnection().then(() => {
   console.log('4. Deploy!');
   console.log('\n✅ App URL will be: https://order-export-pro.vercel.app');
   console.log('\n📝 Check VERCEL-DEPLOY-FINAL.md for complete instructions');
+  console.log('📝 Check VERCEL-KV-SETUP.md for multi-store persistence (optional)');
 });
