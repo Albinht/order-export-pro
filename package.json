@@ -5,9 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "prisma generate && next build",
-    "build:cloudflare": "prisma generate && next build && npm run postbuild:cloudflare",
-    "postbuild:cloudflare": "mkdir -p .vercel/output && cp -r .next/static .vercel/output/static || true",
-    "preview:cloudflare": "npx wrangler pages dev .vercel/output/static --compatibility-date=2024-01-01 --compatibility-flags=nodejs_compat",
+    "build:cloudflare": "prisma generate && next build",
     "start": "next start",
     "postinstall": "prisma generate",
     "migrate:dev": "prisma migrate dev",
