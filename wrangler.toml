@@ -1,5 +1,5 @@
 name = "shopify-order-export"
-pages_build_output_dir = ".vercel/output/static"
+pages_build_output_dir = ".next"
 compatibility_date = "2024-01-01"
 compatibility_flags = ["nodejs_compat"]
 
@@ -7,15 +7,3 @@ compatibility_flags = ["nodejs_compat"]
 # These are placeholders for local development
 [vars]
 NODE_ENV = "production"
-
-# Optional: KV namespace for caching (create in Cloudflare dashboard)
-# [[kv_namespaces]]
-# binding = "CACHE"
-# id = "your-kv-namespace-id"
-
-# Build configuration for Pages
-[build]
-command = "npm run build:cloudflare"
-
-[build.upload]
-format = "service-worker"
