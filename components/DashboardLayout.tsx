@@ -36,11 +36,9 @@ export default function DashboardLayout({ children, storeName, storeType }: Dash
 
   const navigation = [
     { name: 'Orders', href: '/dashboard', icon: ShoppingBag },
-    { name: 'Export History', href: '/dashboard/exports', icon: FileSpreadsheet },
-    { name: 'Stores', href: '/dashboard/stores', icon: Store },
-    { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
-    { name: 'Security', href: '/dashboard/security', icon: Shield },
-    { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+    { name: 'Export History', href: '/export-history', icon: FileSpreadsheet },
+    { name: 'Stores', href: '/stores', icon: Store },
+    { name: 'Admin', href: '/admin', icon: Shield },
   ];
 
   return (
