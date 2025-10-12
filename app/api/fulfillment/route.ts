@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ShopifyClient } from '@/lib/shopify/client';
+import { getStore } from '@/lib/store-manager';
 
 export async function POST(request: NextRequest) {
   try {
-    const { orderId, trackingNumber, trackingCompany, action } = await request.json();
+    const { orderId, trackingNumber, trackingCompany, action, storeId } = await request.json();
 
     if (!orderId) {
       return NextResponse.json(
@@ -12,7 +13,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const client = new ShopifyClient();
+    let client: ShopifyClient;
+    
+    if (storeId) {
+      const store = await getStore(storeId);
+      if (!store) {
+        return NextResponse.json(
+          { error: 'Store not found' },
+          { status: 404 }
+        );
+      }
+      client = new ShopifyClient(store.domain, store.accessToken);
+    } else {
+      client = new ShopifyClient();
+    }
 
     if (action === 'fulfill') {
       // Create fulfillment with optional tracking

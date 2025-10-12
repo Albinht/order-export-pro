@@ -5,13 +5,14 @@ export class ShopifyClient {
   private accessToken: string;
   private apiVersion: string;
 
-  constructor() {
-    this.storeDomain = process.env.SHOPIFY_STORE_DOMAIN || '';
-    this.accessToken = process.env.SHOPIFY_ACCESS_TOKEN || '';
-    this.apiVersion = process.env.SHOPIFY_API_VERSION || '2024-10';
+  constructor(domain?: string, accessToken?: string, apiVersion?: string) {
+    // Allow passing credentials or fallback to env vars
+    this.storeDomain = domain || process.env.SHOPIFY_STORE_DOMAIN || '';
+    this.accessToken = accessToken || process.env.SHOPIFY_ACCESS_TOKEN || '';
+    this.apiVersion = apiVersion || process.env.SHOPIFY_API_VERSION || '2025-01';
 
     if (!this.storeDomain || !this.accessToken) {
-      throw new Error('Missing Shopify credentials. Please check your environment variables.');
+      throw new Error('Missing Shopify credentials. Please check your store configuration.');
     }
   }
 

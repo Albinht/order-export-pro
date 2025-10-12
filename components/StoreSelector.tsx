@@ -1,8 +1,20 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Store } from '@prisma/client';
 import { Plus, X, Check, Trash2, ChevronDown, Globe, ShoppingBag } from 'lucide-react';
+
+interface Store {
+  id: string;
+  name: string;
+  domain: string;
+  platform: 'shopify' | 'woocommerce';
+  accessToken?: string;
+  consumerKey?: string;
+  consumerSecret?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
 interface StoreSelectorProps {
   selectedStoreId: string | null;
@@ -24,23 +36,18 @@ export default function StoreSelector({ selectedStoreId, onStoreSelect }: StoreS
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    initAndFetchStores();
+    fetchStores();
   }, []);
-
-  const initAndFetchStores = async () => {
-    await fetch('/api/init');
-    await fetchStores();
-  };
 
   const fetchStores = async () => {
     try {
       const response = await fetch('/api/stores');
       if (response.ok) {
         const data = await response.json();
-        setStores(data);
+        setStores(data.stores || []);
         
-        if (!selectedStoreId && data.length > 0) {
-          onStoreSelect(data[0].id);
+        if (!selectedStoreId && data.stores && data.stores.length > 0) {
+          onStoreSelect(data.stores[0].id);
         }
       }
     } catch (error) {
@@ -60,18 +67,20 @@ export default function StoreSelector({ selectedStoreId, onStoreSelect }: StoreS
       });
 
       if (response.ok) {
-        const store = await response.json();
-        setStores([...stores, store]);
-        setNewStore({ 
-          name: '', 
-          domain: '', 
-          platform: 'shopify',
-          accessToken: '',
-          consumerKey: '',
-          consumerSecret: ''
-        });
-        setShowAddForm(false);
-        onStoreSelect(store.id);
+        const data = await response.json();
+        if (data.success && data.store) {
+          setStores([...stores, data.store]);
+          setNewStore({ 
+            name: '', 
+            domain: '', 
+            platform: 'shopify',
+            accessToken: '',
+            consumerKey: '',
+            consumerSecret: ''
+          });
+          setShowAddForm(false);
+          onStoreSelect(data.store.id);
+        }
       } else {
         const error = await response.json();
         alert(error.error || 'Failed to add store');

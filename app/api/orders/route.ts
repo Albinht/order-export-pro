@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ShopifyClient } from '@/lib/shopify/client';
+import { getStore } from '@/lib/store-manager';
 
 export async function GET(request: NextRequest) {
   try {
@@ -7,9 +8,32 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
+    const storeId = searchParams.get('storeId');
 
-    // Always use Shopify client from environment variables
-    const client = new ShopifyClient();
+    let client: ShopifyClient;
+    
+    if (storeId) {
+      // Use specific store
+      const store = await getStore(storeId);
+      
+      if (!store) {
+        return NextResponse.json(
+          { error: 'Store not found' },
+          { status: 404 }
+        );
+      }
+      
+      if (store.platform !== 'shopify') {
+        return NextResponse.json(
+          { error: 'Only Shopify stores are supported for order fetching' },
+          { status: 400 }
+        );
+      }
+      
+      client = new ShopifyClient(store.domain, store.accessToken);
+    } else {
+      // Use default from environment variables
+      client = new ShopifyClient();
     
     let orders;
     if (startDate && endDate) {

@@ -104,6 +104,26 @@ export default function Home() {
     }
   }, [autoRefresh, refreshInterval, selectedStoreId]);
 
+  // Fetch stores on mount
+  useEffect(() => {
+    const loadStores = async () => {
+      try {
+        const response = await fetch('/api/stores');
+        const data = await response.json();
+        setStores(data.stores || []);
+        
+        // Auto-select first store if available
+        if (data.stores && data.stores.length > 0 && !selectedStoreId) {
+          setSelectedStoreId(data.stores[0].id);
+        }
+      } catch (error) {
+        console.error('Failed to load stores:', error);
+      }
+    };
+    
+    loadStores();
+  }, []);
+
   const fetchOrders = async (showLoading = true) => {
     if (!selectedStoreId) {
       toast.error('Please select or add a store first');
@@ -213,7 +233,8 @@ export default function Home() {
           orderId,
           trackingNumber: tracking?.number,
           trackingCompany: tracking?.company,
-          action: 'fulfill'
+          action: 'fulfill',
+          storeId: selectedStoreId
         }),
       });
 
