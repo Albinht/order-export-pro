@@ -1,0 +1,11 @@
+# Files to exclude from Cloudflare Pages build output
+.next/cache/
+.next/server/webpack/
+.next/server/chunks/*.pack
+.next/trace
+.next/build-manifest.json
+.next/react-loadable-manifest.json
+.next/server/pages-manifest.json
+.next/prerender-manifest.json
+.next/routes-manifest.json
+.next/middleware-manifest.json

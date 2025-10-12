@@ -1,0 +1,20 @@
+# Ignore cache and other large files for Cloudflare Pages
+.next/cache/
+cache/
+*.pack
+*.log
+.turbo/
+node_modules/
+.git/
+.env*
+*.db
+*.db-journal
+prisma/migrations/
+README.md
+*.md
+docs/
+test/
+tests/
+__tests__/
+*.test.*
+*.spec.*
