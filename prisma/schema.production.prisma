@@ -1,6 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
+// Production schema for Turso/LibSQL
 generator client {
   provider = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
@@ -8,8 +6,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
-  // Works with both local SQLite and Turso LibSQL
+  url      = "file:./dummy.db"  // Dummy URL, actual connection via adapter
 }
 
 model Store {

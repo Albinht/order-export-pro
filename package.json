@@ -5,13 +5,19 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "prisma generate && next build",
-    "build:cloudflare": "prisma generate && next build",
+    "build:cloudflare": "prisma generate && next build && npm run postbuild:cloudflare",
+    "postbuild:cloudflare": "mkdir -p .vercel/output && cp -r .next/static .vercel/output/static || true",
+    "preview:cloudflare": "npx wrangler pages dev .vercel/output/static --compatibility-date=2024-01-01 --compatibility-flags=nodejs_compat",
     "start": "next start",
     "postinstall": "prisma generate",
     "migrate:dev": "prisma migrate dev",
-    "migrate:deploy": "prisma migrate deploy"
+    "migrate:deploy": "prisma migrate deploy",
+    "db:push": "prisma db push",
+    "db:setup:turso": "node scripts/setup-turso-db.js"
   },
   "dependencies": {
+    "@libsql/client": "^0.15.15",
+    "@prisma/adapter-libsql": "^6.17.1",
     "@prisma/client": "^6.16.3",
     "@shopify/admin-api-client": "^1.1.1",
     "@shopify/shopify-api": "^12.0.0",
@@ -43,6 +49,7 @@
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.21",
     "tailwindcss": "^4.1.14",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "^4.42.2"
   }
 }
