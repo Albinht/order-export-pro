@@ -10,9 +10,26 @@ const nextConfig = {
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
   },
   
-  // Runtime configuration for edge compatibility
-  experimental: {
-    runtime: 'edge',
+  // Webpack configuration to exclude problematic files
+  webpack: (config, { isServer }) => {
+    // Exclude .md, LICENSE and other non-JS files from being processed
+    config.module.rules.push({
+      test: /\.(md|txt|LICENSE)$/,
+      use: 'null-loader'
+    });
+    
+    // Fix for libsql/client imports
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        crypto: false,
+      };
+    }
+    
+    return config;
   },
   
   // Headers voor security
