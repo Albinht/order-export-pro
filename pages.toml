@@ -1,0 +1,8 @@
+# Cloudflare Pages configuration
+[build]
+  command = "npm run build:cloudflare"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "20.18.0"
+  NODE_ENV = "production"
