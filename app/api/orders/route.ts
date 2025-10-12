@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
     } else {
       // Use default from environment variables
       client = new ShopifyClient();
+    }
     
     let orders;
     if (startDate && endDate) {
