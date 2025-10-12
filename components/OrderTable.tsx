@@ -30,6 +30,7 @@ interface OrderTableProps {
   onSelectOrder: (orderId: string) => void;
   onSelectAll: () => void;
   onUpdateStatus: (orderId: string, orderNumber: string, status: string) => void;
+  onFulfill?: (order: ShopifyOrder) => void;
 }
 
 export default function OrderTable({
@@ -38,7 +39,8 @@ export default function OrderTable({
   productImages,
   onSelectOrder,
   onSelectAll,
-  onUpdateStatus
+  onUpdateStatus,
+  onFulfill
 }: OrderTableProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -375,11 +377,20 @@ export default function OrderTable({
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
+                      {order.fulfillment_status !== 'fulfilled' && onFulfill && (
+                        <button
+                          onClick={() => onFulfill(order)}
+                          className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                          title="Fulfill Order with Tracking"
+                        >
+                          <Package className="w-4 h-4" />
+                        </button>
+                      )}
                       {order.fulfillment_status !== 'fulfilled' && (
                         <button
                           onClick={() => onUpdateStatus(order.id, order.name, 'fulfilled')}
                           className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                          title="Mark as Fulfilled"
+                          title="Quick Mark as Fulfilled"
                         >
                           <Check className="w-4 h-4" />
                         </button>

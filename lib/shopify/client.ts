@@ -105,4 +105,88 @@ export class ShopifyClient {
       return null;
     }
   }
+
+  async createFulfillment(orderId: string, trackingNumber?: string, trackingCompany?: string): Promise<any> {
+    try {
+      // First get the order to get fulfillment order ID
+      const orderResponse = await fetch(this.getApiUrl(`orders/${orderId}.json`), {
+        method: 'GET',
+        headers: {
+          'X-Shopify-Access-Token': this.accessToken,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!orderResponse.ok) {
+        throw new Error(`Failed to fetch order: ${orderResponse.statusText}`);
+      }
+
+      const orderData = await orderResponse.json();
+      const order = orderData.order;
+      
+      // Get fulfillable line items
+      const lineItems = order.line_items.filter((item: any) => 
+        item.fulfillable_quantity > 0
+      ).map((item: any) => ({
+        id: item.id,
+        quantity: item.fulfillable_quantity
+      }));
+
+      if (lineItems.length === 0) {
+        throw new Error('No items to fulfill');
+      }
+
+      // Create fulfillment
+      const fulfillmentData: any = {
+        fulfillment: {
+          notify_customer: true,
+          line_items: lineItems,
+          location_id: order.location_id
+        }
+      };
+
+      if (trackingNumber) {
+        fulfillmentData.fulfillment.tracking_info = {
+          number: trackingNumber,
+          company: trackingCompany || 'Other'
+        };
+      }
+
+      const response = await fetch(this.getApiUrl(`orders/${orderId}/fulfillments.json`), {
+        method: 'POST',
+        headers: {
+          'X-Shopify-Access-Token': this.accessToken,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(fulfillmentData),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Failed to create fulfillment: ${error}`);
+      }
+
+      const data = await response.json();
+      return data.fulfillment;
+    } catch (error) {
+      console.error('Error creating fulfillment:', error);
+      throw error;
+    }
+  }
+
+  async updateFulfillmentStatus(orderId: string, status: 'fulfilled' | 'unfulfilled' | 'partial'): Promise<boolean> {
+    try {
+      if (status === 'fulfilled') {
+        // Create a fulfillment without tracking
+        await this.createFulfillment(orderId);
+        return true;
+      }
+      // For unfulfilled or partial, Shopify doesn't have a direct API
+      // These are calculated states based on fulfillments
+      return false;
+    } catch (error) {
+      console.error('Error updating fulfillment status:', error);
+      throw error;
+    }
+  }
 }

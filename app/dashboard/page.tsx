@@ -11,6 +11,7 @@ import StoreSelector from '@/components/StoreSelector';
 import ExportHistory from '@/components/ExportHistory';
 import OrderTable from '@/components/OrderTable';
 import DashboardLayout from '@/components/DashboardLayout';
+import FulfillmentModal from '@/components/FulfillmentModal';
 import toast, { Toaster } from 'react-hot-toast';
 import { 
   RefreshCw, 
@@ -45,6 +46,7 @@ export default function Home() {
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [refreshInterval, setRefreshInterval] = useState(30);
   const [stores, setStores] = useState<any[]>([]);
+  const [fulfillmentOrder, setFulfillmentOrder] = useState<any>(null);
 
   // Get current store
   const currentStore = stores.find(s => s.id === selectedStoreId);
@@ -198,6 +200,34 @@ export default function Home() {
       toast.dismiss(toastId);
       toast.error('Export failed. Please try again.');
       console.error('Export error:', error);
+    }
+  };
+
+  const handleFulfillOrder = async (orderId: string, tracking?: { number: string; company: string }) => {
+    const toastId = toast.loading('Creating fulfillment...');
+    try {
+      const response = await fetch('/api/fulfillment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId,
+          trackingNumber: tracking?.number,
+          trackingCompany: tracking?.company,
+          action: 'fulfill'
+        }),
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        toast.success('Order fulfilled successfully!', { id: toastId });
+        await fetchOrders(false);
+      } else {
+        toast.error(result.error || 'Failed to fulfill order', { id: toastId });
+      }
+    } catch (error) {
+      toast.error('Failed to fulfill order', { id: toastId });
+      console.error('Fulfillment error:', error);
     }
   };
 
@@ -567,6 +597,7 @@ export default function Home() {
               onSelectOrder={handleSelectOrder}
               onSelectAll={handleSelectAll}
               onUpdateStatus={handleUpdateStatus}
+              onFulfill={(order) => setFulfillmentOrder(order)}
             />
           </div>
         )}
@@ -598,6 +629,15 @@ export default function Home() {
               Please add and select a store to start managing your orders.
             </p>
           </div>
+        )}
+        
+        {/* Fulfillment Modal */}
+        {fulfillmentOrder && (
+          <FulfillmentModal
+            order={fulfillmentOrder}
+            onClose={() => setFulfillmentOrder(null)}
+            onFulfill={handleFulfillOrder}
+          />
         )}
       </div>
     </DashboardLayout>

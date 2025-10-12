@@ -1,16 +1,18 @@
 import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
 
-// Voor 2 gebruikers is dit meer dan genoeg
+// Hardcoded users met echte password hashes
+// admin:admin123, user:user123
 const USERS = {
   admin: {
     username: 'admin',
-    // Password: 1n$$2O%n2$f2 (gebruik bcrypt hash in productie)
-    passwordHash: '$2a$10$YourHashHere' // Genereer met: bcrypt.hashSync('1n$$2O%n2$f2', 10)
+    // Password: admin123
+    passwordHash: '$2b$10$wIinAOSWCVQ6IQnHPNqryeK.eyksON6TAV4jkVlYU9qtOl0TkFj.W'
   },
   user: {
     username: 'user',
-    passwordHash: '$2a$10$YourHashHere' // Tweede gebruiker
+    // Password: user123
+    passwordHash: '$2b$10$A./8BqW5aI8YAkIGTdjj7ursgPDbg3ECzmpWSVyUdUIGWVP3rK33y'
   }
 };
 
@@ -18,12 +20,7 @@ export async function verifyLogin(username: string, password: string): Promise<b
   const user = Object.values(USERS).find(u => u.username === username);
   if (!user) return false;
   
-  // Voor development, accepteer hardcoded password
-  if (process.env.NODE_ENV === 'development') {
-    if (username === 'admin' && password === '1n$$2O%n2$f2') return true;
-    if (username === 'user' && password === 'user123') return true;
-  }
-  
+  // Always use bcrypt comparison for security
   return await bcrypt.compare(password, user.passwordHash);
 }
 

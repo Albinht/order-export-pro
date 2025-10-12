@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ShopifyClient } from '@/lib/shopify/client';
-import { createPlatformClient, PlatformClient } from '@/lib/platform-client';
-import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,28 +7,9 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
-    const storeId = searchParams.get('storeId');
 
-    let client: PlatformClient | ShopifyClient;
-    
-    if (storeId) {
-      // Use specific store
-      const store = await prisma.store.findUnique({
-        where: { id: storeId },
-      });
-      
-      if (!store) {
-        return NextResponse.json(
-          { error: 'Store not found' },
-          { status: 404 }
-        );
-      }
-      
-      client = createPlatformClient(store);
-    } else {
-      // Use default store from env
-      client = new ShopifyClient();
-    }
+    // Always use Shopify client from environment variables
+    const client = new ShopifyClient();
     
     let orders;
     if (startDate && endDate) {
