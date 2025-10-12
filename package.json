@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "prisma generate && next build",
-    "build:cloudflare": "NODE_ENV=production prisma generate && NODE_ENV=production next build && find .next -name '*.pack' -delete && rm -rf .next/cache",
+    "build:cloudflare": "DATABASE_URL='file:./dummy.db' NODE_ENV=production prisma generate && DATABASE_URL='file:./dummy.db' NODE_ENV=production next build && find .next -name '*.pack' -delete && rm -rf .next/cache",
     "start": "next start",
     "postinstall": "prisma generate",
     "migrate:dev": "prisma migrate dev",
