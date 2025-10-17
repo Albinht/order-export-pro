@@ -1,4 +1,6 @@
 import { PrismaClient } from '@prisma/client';
+import { createClient } from '@libsql/client';
+import { PrismaLibSQL } from '@prisma/adapter-libsql';
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -6,14 +8,28 @@ const globalForPrisma = globalThis as unknown as {
 
 // Create Prisma client - handle build time gracefully
 function createPrismaClient() {
-  // During build, use a dummy database URL to prevent errors
-  const databaseUrl = process.env.DATABASE_URL || 
-    (process.env.NODE_ENV === 'production' ? 
-      'file:./dummy.db' : 
-      'file:./prisma/dev.db');
-  
+  const databaseUrl = process.env.DATABASE_URL || process.env.TURSO_DATABASE_URL;
+  const databaseAuthToken = process.env.DATABASE_AUTH_TOKEN || process.env.TURSO_AUTH_TOKEN;
+
+  if (databaseUrl && databaseUrl.startsWith('libsql://')) {
+    const client = createClient({
+      url: databaseUrl,
+      authToken: databaseAuthToken,
+    });
+    const adapter = new PrismaLibSQL(client as any);
+    return new PrismaClient({
+      adapter,
+      log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+    });
+  }
+
+  const fallbackUrl = databaseUrl ||
+    (process.env.NODE_ENV === 'production'
+      ? 'file:./dummy.db'
+      : 'file:./prisma/dev.db');
+
   return new PrismaClient({
-    datasourceUrl: databaseUrl,
+    datasourceUrl: fallbackUrl,
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
   });
 }

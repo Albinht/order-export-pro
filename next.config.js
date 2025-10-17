@@ -28,6 +28,11 @@ const nextConfig = {
         crypto: false,
       };
     }
+
+    config.resolve.alias = {
+      ...(config.resolve.alias || {}),
+      '@libsql/client': '@libsql/client/web',
+    };
     
     return config;
   },
