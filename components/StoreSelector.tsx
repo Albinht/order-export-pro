@@ -42,12 +42,20 @@ export default function StoreSelector({ selectedStoreId, onStoreSelect }: StoreS
   const fetchStores = async () => {
     try {
       const response = await fetch('/api/stores');
-      if (response.ok) {
-        const data = await response.json();
-        setStores(data.stores || []);
-        
-        if (!selectedStoreId && data.stores && data.stores.length > 0) {
-          onStoreSelect(data.stores[0].id);
+      if (!response.ok) {
+        throw new Error('Failed to fetch stores');
+      }
+
+      const data = await response.json();
+      const fetchedStores: Store[] = data.stores || [];
+      setStores(fetchedStores);
+
+      if (!selectedStoreId && fetchedStores.length > 0) {
+        onStoreSelect(fetchedStores[0].id);
+      } else if (selectedStoreId) {
+        const exists = fetchedStores.some(store => store.id === selectedStoreId);
+        if (!exists) {
+          onStoreSelect(fetchedStores.length > 0 ? fetchedStores[0].id : null);
         }
       }
     } catch (error) {
@@ -69,7 +77,7 @@ export default function StoreSelector({ selectedStoreId, onStoreSelect }: StoreS
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.store) {
-          setStores([...stores, data.store]);
+          await fetchStores();
           setNewStore({ 
             name: '', 
             domain: '', 
@@ -111,10 +119,7 @@ export default function StoreSelector({ selectedStoreId, onStoreSelect }: StoreS
       });
 
       if (response.ok) {
-        setStores(stores.filter(s => s.id !== id));
-        if (selectedStoreId === id) {
-          onStoreSelect(stores.find(s => s.id !== id)?.id || null);
-        }
+        await fetchStores();
       } else {
         const error = await response.json();
         alert(error.error || 'Kon store niet verwijderen');

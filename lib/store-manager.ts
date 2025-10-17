@@ -1,149 +1,139 @@
-// Store manager using Vercel KV or fallback to in-memory storage
-// For production: Use Vercel KV Store
-// For development: Use in-memory storage
+import { prisma } from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
+import type { Store as PrismaStore } from '@prisma/client';
 
-interface Store {
+export type StorePlatform = 'shopify' | 'woocommerce';
+
+export interface StoreRecord {
   id: string;
   name: string;
   domain: string;
-  platform: 'shopify' | 'woocommerce';
-  accessToken?: string;
-  consumerKey?: string;
-  consumerSecret?: string;
+  platform: StorePlatform;
+  accessToken?: string | null;
+  consumerKey?: string | null;
+  consumerSecret?: string | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
-// In-memory storage for development/fallback
-let inMemoryStores: Store[] = [];
+export interface StoreInput {
+  name: string;
+  domain: string;
+  platform: StorePlatform;
+  accessToken?: string | null;
+  consumerKey?: string | null;
+  consumerSecret?: string | null;
+  isActive?: boolean;
+}
 
-// Check if we have Vercel KV available
-const hasVercelKV = process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN;
-
-// Initialize with default store from env if available
-if (process.env.SHOPIFY_STORE_DOMAIN && process.env.SHOPIFY_ACCESS_TOKEN) {
-  const defaultStore: Store = {
-    id: 'default-store',
-    name: 'Default Store',
-    domain: process.env.SHOPIFY_STORE_DOMAIN,
-    platform: 'shopify',
-    accessToken: process.env.SHOPIFY_ACCESS_TOKEN,
-    isActive: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+function serializeStore(store: PrismaStore): StoreRecord {
+  return {
+    ...store,
+    createdAt: store.createdAt.toISOString(),
+    updatedAt: store.updatedAt.toISOString(),
+    platform: store.platform as StorePlatform,
   };
-  inMemoryStores.push(defaultStore);
 }
 
-// KV Store operations (if available)
-async function kvGet(key: string) {
-  if (!hasVercelKV) return null;
-  
-  try {
-    const response = await fetch(`${process.env.KV_REST_API_URL}/get/${key}`, {
-      headers: {
-        Authorization: `Bearer ${process.env.KV_REST_API_TOKEN}`,
+async function ensureDefaultStore() {
+  if (!process.env.SHOPIFY_STORE_DOMAIN || !process.env.SHOPIFY_ACCESS_TOKEN) {
+    return;
+  }
+
+  const existing = await prisma.store.findFirst({
+    where: { domain: process.env.SHOPIFY_STORE_DOMAIN.toLowerCase() },
+  });
+
+  if (!existing) {
+    await prisma.store.create({
+      data: {
+        name: 'Default Store',
+        domain: process.env.SHOPIFY_STORE_DOMAIN.toLowerCase(),
+        platform: 'shopify',
+        accessToken: process.env.SHOPIFY_ACCESS_TOKEN,
+        isActive: true,
       },
     });
-    
-    if (!response.ok) return null;
-    const data = await response.json();
-    return data.result;
-  } catch (error) {
-    console.error('KV Get error:', error);
-    return null;
   }
 }
 
-async function kvSet(key: string, value: any) {
-  if (!hasVercelKV) return false;
-  
-  try {
-    const response = await fetch(`${process.env.KV_REST_API_URL}/set/${key}`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${process.env.KV_REST_API_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(value),
+export async function getStores(): Promise<StoreRecord[]> {
+  const stores = await prisma.store.findMany({
+    orderBy: { createdAt: 'asc' },
+  });
+
+  if (stores.length === 0) {
+    await ensureDefaultStore();
+    const seededStores = await prisma.store.findMany({
+      orderBy: { createdAt: 'asc' },
     });
-    
-    return response.ok;
-  } catch (error) {
-    console.error('KV Set error:', error);
-    return false;
+    return seededStores.map(serializeStore);
   }
+
+  return stores.map(serializeStore);
 }
 
-// Store management functions
-export async function getStores(): Promise<Store[]> {
-  if (hasVercelKV) {
-    const stores = await kvGet('stores');
-    if (stores) {
-      return JSON.parse(stores);
+export async function getStore(id: string): Promise<StoreRecord | null> {
+  const store = await prisma.store.findUnique({ where: { id } });
+  return store ? serializeStore(store) : null;
+}
+
+export async function addStore(data: StoreInput): Promise<StoreRecord> {
+  try {
+    const store = await prisma.store.create({
+      data: {
+        name: data.name,
+        domain: data.domain.toLowerCase(),
+        platform: data.platform,
+        accessToken: data.accessToken,
+        consumerKey: data.consumerKey,
+        consumerSecret: data.consumerSecret,
+        isActive: data.isActive ?? true,
+      },
+    });
+
+    return serializeStore(store);
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      throw new Error('Store domain already exists');
     }
+    throw error;
   }
-  return inMemoryStores;
 }
 
-export async function getStore(id: string): Promise<Store | null> {
-  const stores = await getStores();
-  return stores.find(s => s.id === id) || null;
-}
+export async function updateStore(id: string, updates: Partial<StoreInput>): Promise<StoreRecord | null> {
+  try {
+    const store = await prisma.store.update({
+      where: { id },
+      data: {
+        name: updates.name,
+        domain: updates.domain?.toLowerCase(),
+        platform: updates.platform,
+        accessToken: updates.accessToken,
+        consumerKey: updates.consumerKey,
+        consumerSecret: updates.consumerSecret,
+        isActive: updates.isActive,
+      },
+    });
 
-export async function addStore(storeData: Omit<Store, 'id' | 'createdAt' | 'updatedAt'>): Promise<Store> {
-  const newStore: Store = {
-    ...storeData,
-    id: `store-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-  
-  const stores = await getStores();
-  stores.push(newStore);
-  
-  if (hasVercelKV) {
-    await kvSet('stores', JSON.stringify(stores));
-  } else {
-    inMemoryStores = stores;
+    return serializeStore(store);
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+      return null;
+    }
+    throw error;
   }
-  
-  return newStore;
-}
-
-export async function updateStore(id: string, updates: Partial<Store>): Promise<Store | null> {
-  const stores = await getStores();
-  const index = stores.findIndex(s => s.id === id);
-  
-  if (index === -1) return null;
-  
-  stores[index] = {
-    ...stores[index],
-    ...updates,
-    updatedAt: new Date().toISOString(),
-  };
-  
-  if (hasVercelKV) {
-    await kvSet('stores', JSON.stringify(stores));
-  } else {
-    inMemoryStores = stores;
-  }
-  
-  return stores[index];
 }
 
 export async function deleteStore(id: string): Promise<boolean> {
-  const stores = await getStores();
-  const filtered = stores.filter(s => s.id !== id);
-  
-  if (filtered.length === stores.length) return false;
-  
-  if (hasVercelKV) {
-    await kvSet('stores', JSON.stringify(filtered));
-  } else {
-    inMemoryStores = filtered;
+  try {
+    await prisma.store.delete({ where: { id } });
+    return true;
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+      return false;
+    }
+    throw error;
   }
-  
-  return true;
 }

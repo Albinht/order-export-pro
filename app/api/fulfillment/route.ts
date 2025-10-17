@@ -13,20 +13,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let client: ShopifyClient;
-    
-    if (storeId) {
-      const store = await getStore(storeId);
-      if (!store) {
-        return NextResponse.json(
-          { error: 'Store not found' },
-          { status: 404 }
-        );
-      }
-      client = new ShopifyClient(store.domain, store.accessToken);
-    } else {
-      client = new ShopifyClient();
+    if (!storeId) {
+      return NextResponse.json(
+        { error: 'Store ID is required' },
+        { status: 400 }
+      );
     }
+
+    const store = await getStore(storeId);
+    if (!store) {
+      return NextResponse.json(
+        { error: 'Store not found' },
+        { status: 404 }
+      );
+    }
+
+    if (store.platform !== 'shopify') {
+      return NextResponse.json(
+        { error: 'Fulfillment is only supported for Shopify stores' },
+        { status: 400 }
+      );
+    }
+
+    if (!store.accessToken) {
+      return NextResponse.json(
+        { error: 'Store is missing Shopify access token' },
+        { status: 400 }
+      );
+    }
+
+    const client = new ShopifyClient(store.domain, store.accessToken);
 
     if (action === 'fulfill') {
       // Create fulfillment with optional tracking
@@ -67,7 +83,7 @@ export async function POST(request: NextRequest) {
 // Bulk fulfillment endpoint
 export async function PUT(request: NextRequest) {
   try {
-    const { orderIds, trackingInfo } = await request.json();
+    const { orderIds, trackingInfo, storeId } = await request.json();
 
     if (!orderIds || !Array.isArray(orderIds)) {
       return NextResponse.json(
@@ -76,7 +92,36 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const client = new ShopifyClient();
+    if (!storeId) {
+      return NextResponse.json(
+        { error: 'Store ID is required' },
+        { status: 400 }
+      );
+    }
+
+    const store = await getStore(storeId);
+    if (!store) {
+      return NextResponse.json(
+        { error: 'Store not found' },
+        { status: 404 }
+      );
+    }
+
+    if (store.platform !== 'shopify') {
+      return NextResponse.json(
+        { error: 'Fulfillment is only supported for Shopify stores' },
+        { status: 400 }
+      );
+    }
+
+    if (!store.accessToken) {
+      return NextResponse.json(
+        { error: 'Store is missing Shopify access token' },
+        { status: 400 }
+      );
+    }
+
+    const client = new ShopifyClient(store.domain, store.accessToken);
     const results = [];
     const errors = [];
 

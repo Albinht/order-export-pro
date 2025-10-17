@@ -29,6 +29,12 @@ export async function GET(request: NextRequest) {
           { status: 400 }
         );
       }
+      if (!store.accessToken) {
+        return NextResponse.json(
+          { error: 'Store is missing Shopify access token' },
+          { status: 400 }
+        );
+      }
       
       client = new ShopifyClient(store.domain, store.accessToken);
     } else {

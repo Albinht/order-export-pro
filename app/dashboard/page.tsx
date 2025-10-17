@@ -267,29 +267,19 @@ export default function Home() {
       });
       
       const result = await response.json();
-      console.log('Bulk update result:', result);
-      
-      const localOnlyCount = result.results?.filter((r: any) => r.localOnly).length || 0;
-      const actuallyFulfilledCount = result.updated - localOnlyCount;
-      
-      if (localOnlyCount > 0 && actuallyFulfilledCount === 0) {
-        toast(`⚠️ ${localOnlyCount} orders alleen lokaal gemarkeerd (API permissies ontbreken)`, {
-          duration: 6000,
-          icon: '⚠️',
-        });
-      } else if (localOnlyCount > 0 && actuallyFulfilledCount > 0) {
-        toast(`${actuallyFulfilledCount} orders fulfilled in store, ${localOnlyCount} alleen lokaal (permissies ontbreken)`, {
-          duration: 6000,
-          icon: '⚠️',
-        });
-      } else if (result.updated > 0) {
-        toast.success(`✅ ${result.updated} orders succesvol als fulfilled gemarkeerd`);
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Bulk fulfillment failed');
       }
-      
+
       if (result.failed > 0) {
         toast.error(`❌ ${result.failed} orders konden niet worden fulfilled`, {
           duration: 6000
         });
+      }
+
+      if (result.updated > 0) {
+        toast.success(`✅ ${result.updated} orders succesvol als fulfilled gemarkeerd`);
       }
     } catch (error) {
       console.error('Failed to update order status:', error);
@@ -319,7 +309,7 @@ export default function Home() {
     if (!selectedStoreId) return;
 
     try {
-      await fetch('/api/order-status', {
+      const response = await fetch('/api/order-status', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -330,6 +320,11 @@ export default function Home() {
         }),
       });
       
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.error || 'Failed to update order status');
+      }
+
       toast.success(`Order ${orderNumber} marked as ${status}`);
       setOrders(orders.map(o => 
         o.id === orderId 

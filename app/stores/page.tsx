@@ -41,6 +41,10 @@ export default function StoresPage() {
     try {
       setLoading(true);
       const response = await fetch('/api/stores');
+      if (!response.ok) {
+        throw new Error('Failed to fetch stores');
+      }
+
       const data = await response.json();
       setStores(data.stores || []);
     } catch (error) {
@@ -71,7 +75,7 @@ export default function StoresPage() {
       
       if (response.ok && result.success) {
         toast.success(editingStore ? 'Store updated!' : 'Store added!');
-        fetchStores();
+        await fetchStores();
         resetForm();
       } else {
         toast.error(result.error || 'Failed to save store');
@@ -91,7 +95,7 @@ export default function StoresPage() {
 
       if (response.ok) {
         toast.success('Store deleted');
-        fetchStores();
+        await fetchStores();
       } else {
         const error = await response.json();
         toast.error(error.error || 'Failed to delete store');

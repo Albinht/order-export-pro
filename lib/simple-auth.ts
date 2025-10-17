@@ -16,6 +16,10 @@ const USERS = {
   }
 };
 
+export async function getUsers() {
+  return Object.values(USERS);
+}
+
 export async function verifyLogin(username: string, password: string): Promise<boolean> {
   const user = Object.values(USERS).find(u => u.username === username);
   if (!user) return false;

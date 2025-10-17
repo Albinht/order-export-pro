@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { cookies } from 'next/headers';
-import { users } from '@/lib/simple-auth';
+import { prisma } from '@/lib/prisma';
+import { getUsers } from '@/lib/simple-auth';
 
 // Note: In production, credentials should be stored in a database
 // This in-memory update will reset on deployment
@@ -18,7 +19,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find the admin user
+    const users = await getUsers();
     const adminUser = users.find(u => u.username === 'admin');
     
     if (!adminUser) {
@@ -47,6 +48,10 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
+      await prisma.user.updateMany({
+        where: { username: adminUser.username },
+        data: { username: newUsername },
+      });
       adminUser.username = newUsername;
     }
 
@@ -61,6 +66,10 @@ export async function POST(request: NextRequest) {
       
       // Hash the new password
       const hashedPassword = await bcrypt.hash(newPassword, 10);
+      await prisma.user.updateMany({
+        where: { username: adminUser.username },
+        data: { passwordHash: hashedPassword },
+      });
       adminUser.passwordHash = hashedPassword;
     }
 
@@ -94,6 +103,7 @@ export async function POST(request: NextRequest) {
 
 // GET endpoint to check current username (for display purposes)
 export async function GET() {
+  const users = await getUsers();
   const adminUser = users.find(u => u.username === 'admin');
   
   return NextResponse.json({

@@ -1,7 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { getStore } from '@/lib/store-manager';
+import { ShopifyClient } from '@/lib/shopify/client';
 
-// In-memory storage for order statuses (resets on deployment)
-let orderStatuses: any[] = [];
+interface TrackingInfo {
+  number?: string;
+  company?: string;
+}
+
+async function fulfillInShopify(storeId: string, orderId: string, tracking?: TrackingInfo) {
+  const store = await getStore(storeId);
+
+  if (!store) {
+    throw new Error('Store not found');
+  }
+
+  if (store.platform !== 'shopify') {
+    throw new Error('Fulfillment only supported for Shopify stores');
+  }
+
+  if (!store.accessToken) {
+    throw new Error('Store is missing Shopify access token');
+  }
+
+  const client = new ShopifyClient(store.domain, store.accessToken, process.env.SHOPIFY_API_VERSION);
+  const fulfillment = await client.createFulfillment(orderId, tracking?.number, tracking?.company);
+  return fulfillment;
+}
 
 // GET order status
 export async function GET(request: NextRequest) {
@@ -10,21 +35,20 @@ export async function GET(request: NextRequest) {
     const storeId = searchParams.get('storeId');
     const orderId = searchParams.get('orderId');
     
-    let filtered = orderStatuses;
-    
+    const where: any = {};
     if (storeId) {
-      filtered = filtered.filter(s => s.storeId === storeId);
+      where.storeId = storeId;
     }
     if (orderId) {
-      filtered = filtered.filter(s => s.orderId === orderId);
+      where.orderId = orderId;
     }
+
+    const statuses = await prisma.orderStatus.findMany({
+      where,
+      orderBy: { updatedAt: 'desc' },
+    });
     
-    // Sort by updatedAt descending
-    const sorted = filtered.sort((a, b) => 
-      new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-    );
-    
-    return NextResponse.json(sorted);
+    return NextResponse.json(statuses);
   } catch (error) {
     console.error('Error fetching order status:', error);
     return NextResponse.json(
@@ -47,32 +71,49 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Convert orderId to string
     const orderIdStr = String(orderId);
-    
-    // Find existing status or create new one
-    const existingIndex = orderStatuses.findIndex(
-      s => s.storeId === storeId && s.orderId === orderIdStr
-    );
-    
-    const orderStatus = {
-      id: existingIndex >= 0 ? orderStatuses[existingIndex].id : `status-${Date.now()}`,
-      storeId,
-      orderId: orderIdStr,
-      orderNumber,
-      status,
-      trackingNumber,
-      trackingCompany,
-      notes,
-      createdAt: existingIndex >= 0 ? orderStatuses[existingIndex].createdAt : new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    
-    if (existingIndex >= 0) {
-      orderStatuses[existingIndex] = orderStatus;
-    } else {
-      orderStatuses.push(orderStatus);
+
+    let fulfillmentId: string | null = null;
+
+    if (status === 'fulfilled') {
+      try {
+        const fulfillment = await fulfillInShopify(storeId, orderIdStr, {
+          number: trackingNumber || undefined,
+          company: trackingCompany || undefined,
+        });
+        fulfillmentId = fulfillment?.id ? String(fulfillment.id) : null;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Failed to fulfill order in Shopify';
+        return NextResponse.json({ error: message }, { status: 502 });
+      }
     }
+
+    const orderStatus = await prisma.orderStatus.upsert({
+      where: {
+        storeId_orderId: {
+          storeId,
+          orderId: orderIdStr,
+        },
+      },
+      create: {
+        storeId,
+        orderId: orderIdStr,
+        orderNumber,
+        status,
+        fulfillmentId,
+        trackingNumber,
+        trackingCompany,
+        notes,
+      },
+      update: {
+        orderNumber,
+        status,
+        fulfillmentId,
+        trackingNumber,
+        trackingCompany,
+        notes,
+      },
+    });
 
     return NextResponse.json(orderStatus);
   } catch (error) {
@@ -97,34 +138,47 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const results = [];
+    const results: Array<{ orderId: string; success: boolean; error?: string }> = [];
 
     // Process each order
     for (const { orderId, orderNumber } of orderIds) {
       try {
         const orderIdStr = String(orderId);
-        
-        // Find existing status or create new one
-        const existingIndex = orderStatuses.findIndex(
-          s => s.storeId === storeId && s.orderId === orderIdStr
-        );
-        
-        const orderStatus = {
-          id: existingIndex >= 0 ? orderStatuses[existingIndex].id : `status-${Date.now()}-${orderId}`,
-          storeId,
-          orderId: orderIdStr,
-          orderNumber,
-          status,
-          createdAt: existingIndex >= 0 ? orderStatuses[existingIndex].createdAt : new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        
-        if (existingIndex >= 0) {
-          orderStatuses[existingIndex] = orderStatus;
-        } else {
-          orderStatuses.push(orderStatus);
+
+        let fulfillmentId: string | null = null;
+
+        if (status === 'fulfilled') {
+          try {
+            const fulfillment = await fulfillInShopify(storeId, orderIdStr);
+            fulfillmentId = fulfillment?.id ? String(fulfillment.id) : null;
+          } catch (error) {
+            const message = error instanceof Error ? error.message : 'Failed to fulfill order in Shopify';
+            results.push({ orderId: orderIdStr, success: false, error: message });
+            continue;
+          }
         }
-        
+
+        await prisma.orderStatus.upsert({
+          where: {
+            storeId_orderId: {
+              storeId,
+              orderId: orderIdStr,
+            },
+          },
+          create: {
+            storeId,
+            orderId: orderIdStr,
+            orderNumber,
+            status,
+            fulfillmentId,
+          },
+          update: {
+            orderNumber,
+            status,
+            fulfillmentId,
+          },
+        });
+
         results.push({ orderId: orderIdStr, success: true });
       } catch (error: any) {
         console.error(`Failed to process order ${orderId}:`, error);

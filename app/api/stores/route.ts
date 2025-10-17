@@ -71,15 +71,23 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    const newStore = await addStore({
-      name: body.name,
-      domain: body.domain,
-      platform: body.platform,
-      accessToken: body.accessToken,
-      consumerKey: body.consumerKey,
-      consumerSecret: body.consumerSecret,
-      isActive: body.isActive !== false,
-    });
+    let newStore;
+
+    try {
+      newStore = await addStore({
+        name: body.name,
+        domain: body.domain,
+        platform: body.platform,
+        accessToken: body.accessToken,
+        consumerKey: body.consumerKey,
+        consumerSecret: body.consumerSecret,
+        isActive: body.isActive !== false,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to add store';
+      const status = message.includes('domain') ? 409 : 500;
+      return NextResponse.json({ error: message }, { status });
+    }
     
     return NextResponse.json({ 
       success: true, 
@@ -107,7 +115,15 @@ export async function PUT(request: NextRequest) {
       );
     }
     
-    const updatedStore = await updateStore(body.id, body);
+    let updatedStore;
+
+    try {
+      updatedStore = await updateStore(body.id, body);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to update store';
+      const status = message.includes('domain') ? 409 : 500;
+      return NextResponse.json({ error: message }, { status });
+    }
     
     if (!updatedStore) {
       return NextResponse.json(
