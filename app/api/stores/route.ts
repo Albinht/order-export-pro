@@ -20,8 +20,15 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
+    const name = typeof body.name === 'string' ? body.name.trim() : '';
+    const domain = typeof body.domain === 'string' ? body.domain.trim() : '';
+    const platform = typeof body.platform === 'string' ? body.platform.trim() : '';
+    const accessToken = typeof body.accessToken === 'string' ? body.accessToken.trim() : body.accessToken;
+    const consumerKey = typeof body.consumerKey === 'string' ? body.consumerKey.trim() : body.consumerKey;
+    const consumerSecret = typeof body.consumerSecret === 'string' ? body.consumerSecret.trim() : body.consumerSecret;
+
     // Validate required fields
-    if (!body.name || !body.domain || !body.platform) {
+    if (!name || !domain || !platform) {
       return NextResponse.json(
         { error: 'Missing required fields: name, domain, platform' },
         { status: 400 }
@@ -29,7 +36,7 @@ export async function POST(request: NextRequest) {
     }
     
     // For Shopify, require access token
-    if (body.platform === 'shopify' && !body.accessToken) {
+    if (platform === 'shopify' && !accessToken) {
       return NextResponse.json(
         { error: 'Access token is required for Shopify stores' },
         { status: 400 }
@@ -37,7 +44,7 @@ export async function POST(request: NextRequest) {
     }
     
     // For WooCommerce, require consumer key and secret
-    if (body.platform === 'woocommerce' && (!body.consumerKey || !body.consumerSecret)) {
+    if (platform === 'woocommerce' && (!consumerKey || !consumerSecret)) {
       return NextResponse.json(
         { error: 'Consumer key and secret are required for WooCommerce stores' },
         { status: 400 }
@@ -45,13 +52,13 @@ export async function POST(request: NextRequest) {
     }
     
     // Test the connection before saving
-    if (body.platform === 'shopify') {
+    if (platform === 'shopify') {
       try {
         const testResponse = await fetch(
-          `https://${body.domain}/admin/api/2025-01/shop.json`,
+          `https://${domain}/admin/api/2025-01/shop.json`,
           {
             headers: {
-              'X-Shopify-Access-Token': body.accessToken,
+              'X-Shopify-Access-Token': accessToken,
               'Content-Type': 'application/json',
             },
           }
@@ -75,12 +82,12 @@ export async function POST(request: NextRequest) {
 
     try {
       newStore = await addStore({
-        name: body.name,
-        domain: body.domain,
-        platform: body.platform,
-        accessToken: body.accessToken,
-        consumerKey: body.consumerKey,
-        consumerSecret: body.consumerSecret,
+        name,
+        domain,
+        platform,
+        accessToken,
+        consumerKey,
+        consumerSecret,
         isActive: body.isActive !== false,
       });
     } catch (error) {
@@ -114,11 +121,28 @@ export async function PUT(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const updates: Record<string, any> = { ...body };
+    if (typeof updates.name === 'string') {
+      updates.name = updates.name.trim();
+    }
+    if (typeof updates.domain === 'string') {
+      updates.domain = updates.domain.trim();
+    }
+    if (typeof updates.accessToken === 'string') {
+      updates.accessToken = updates.accessToken.trim();
+    }
+    if (typeof updates.consumerKey === 'string') {
+      updates.consumerKey = updates.consumerKey.trim();
+    }
+    if (typeof updates.consumerSecret === 'string') {
+      updates.consumerSecret = updates.consumerSecret.trim();
+    }
     
     let updatedStore;
 
     try {
-      updatedStore = await updateStore(body.id, body);
+      updatedStore = await updateStore(body.id, updates);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to update store';
       const status = message.includes('domain') ? 409 : 500;
