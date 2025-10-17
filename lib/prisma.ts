@@ -10,7 +10,7 @@ function createPrismaClient() {
   const databaseUrl = process.env.DATABASE_URL || 
     (process.env.NODE_ENV === 'production' ? 
       'file:./dummy.db' : 
-      'file:./prisma/database.db');
+      'file:./prisma/dev.db');
   
   return new PrismaClient({
     datasourceUrl: databaseUrl,
