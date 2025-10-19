@@ -36,25 +36,46 @@ function serializeStore(store: PrismaStore): StoreRecord {
   };
 }
 
+const STORES_CONFIG = [
+  {
+    name: 'Malen Nach Zahlen Experte',
+    domain: 'malen-nach-zahlen-experte.myshopify.com',
+    tokenEnv: 'SHOPIFY_TOKEN_MALEN',
+    platform: 'shopify' as const,
+  },
+  {
+    name: 'Painting Expert',
+    domain: 'painting-expert.myshopify.com',
+    tokenEnv: 'SHOPIFY_TOKEN_PAINTING',
+    platform: 'shopify' as const,
+  },
+];
+
 async function ensureDefaultStore() {
-  if (!process.env.SHOPIFY_STORE_DOMAIN || !process.env.SHOPIFY_ACCESS_TOKEN) {
-    return;
-  }
+  // Seed all configured stores if they don't exist
+  for (const storeConfig of STORES_CONFIG) {
+    const accessToken = process.env[storeConfig.tokenEnv];
+    
+    if (!accessToken) {
+      continue;
+    }
 
-  const existing = await prisma.store.findFirst({
-    where: { domain: process.env.SHOPIFY_STORE_DOMAIN.toLowerCase() },
-  });
-
-  if (!existing) {
-    await prisma.store.create({
-      data: {
-        name: 'Default Store',
-        domain: process.env.SHOPIFY_STORE_DOMAIN.toLowerCase(),
-        platform: 'shopify',
-        accessToken: process.env.SHOPIFY_ACCESS_TOKEN,
-        isActive: true,
-      },
+    const existing = await prisma.store.findFirst({
+      where: { domain: storeConfig.domain },
     });
+
+    if (!existing) {
+      await prisma.store.create({
+        data: {
+          name: storeConfig.name,
+          domain: storeConfig.domain,
+          platform: storeConfig.platform,
+          accessToken: accessToken,
+          isActive: true,
+        },
+      });
+      console.log(`Created store: ${storeConfig.name}`);
+    }
   }
 }
 

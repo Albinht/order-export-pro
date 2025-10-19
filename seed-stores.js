@@ -1,30 +1,33 @@
-import { prisma } from './prisma';
+// Seed script to add both configured stores to database
+require('dotenv').config({ path: '.env.local' });
+const { PrismaClient } = require('@prisma/client');
+
+const prisma = new PrismaClient();
 
 const STORES_CONFIG = [
   {
     name: 'Malen Nach Zahlen Experte',
     domain: 'malen-nach-zahlen-experte.myshopify.com',
     tokenEnv: 'SHOPIFY_TOKEN_MALEN',
-    platform: 'shopify' as const,
+    platform: 'shopify',
   },
   {
     name: 'Painting Expert',
     domain: 'painting-expert.myshopify.com',
     tokenEnv: 'SHOPIFY_TOKEN_PAINTING',
-    platform: 'shopify' as const,
+    platform: 'shopify',
   },
 ];
 
-export async function seedDefaultStore() {
+async function seedStores() {
   try {
-    const createdStores = [];
-    
-    // Seed all configured stores
+    console.log('🌱 Seeding stores...\n');
+
     for (const storeConfig of STORES_CONFIG) {
       const accessToken = process.env[storeConfig.tokenEnv];
       
       if (!accessToken) {
-        console.log(`⚠️  Skipping ${storeConfig.name} - ${storeConfig.tokenEnv} not set`);
+        console.log(`⚠️  Skipping ${storeConfig.name} - ${storeConfig.tokenEnv} not set in environment`);
         continue;
       }
 
@@ -42,17 +45,19 @@ export async function seedDefaultStore() {
             isActive: true,
           },
         });
-        
-        console.log('Store created:', store.name);
-        createdStores.push(store);
+        console.log(`✅ Created store: ${store.name}`);
       } else {
-        createdStores.push(existingStore);
+        console.log(`⏭️  Store already exists: ${existingStore.name}`);
       }
     }
 
-    return createdStores.length > 0 ? createdStores[0] : null;
+    await prisma.$disconnect();
+    console.log('\n✅ Seeding completed!');
   } catch (error) {
-    console.error('Error seeding stores:', error);
-    return null;
+    console.error('❌ Error seeding stores:', error);
+    await prisma.$disconnect();
+    process.exit(1);
   }
 }
+
+seedStores();

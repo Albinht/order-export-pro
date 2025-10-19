@@ -11,7 +11,8 @@
     "migrate:dev": "prisma migrate dev",
     "migrate:deploy": "prisma migrate deploy",
     "db:push": "prisma db push",
-    "db:setup:turso": "node scripts/setup-turso-db.js"
+    "db:setup:turso": "node scripts/setup-turso-db.js",
+    "db:seed": "node seed-stores.js"
   },
   "dependencies": {
     "@libsql/client": "^0.15.15",
