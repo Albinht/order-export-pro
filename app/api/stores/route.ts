@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getStores, addStore, updateStore, deleteStore } from '@/lib/store-manager';
 
-// GET all stores
+// GET all stores - Automatically creates hardcoded stores on first call
 export async function GET() {
   try {
+    // This call automatically ensures both hardcoded stores exist
     const stores = await getStores();
     return NextResponse.json({ stores });
   } catch (error) {

@@ -52,11 +52,12 @@ const STORES_CONFIG = [
 ];
 
 async function ensureDefaultStore() {
-  // Seed all configured stores if they don't exist
+  // Seed all configured stores if they don't exist - AUTOMATIC
   for (const storeConfig of STORES_CONFIG) {
     const accessToken = process.env[storeConfig.tokenEnv];
     
     if (!accessToken) {
+      console.log(`⚠️  Skipping ${storeConfig.name} - ${storeConfig.tokenEnv} not set`);
       continue;
     }
 
@@ -74,23 +75,18 @@ async function ensureDefaultStore() {
           isActive: true,
         },
       });
-      console.log(`Created store: ${storeConfig.name}`);
+      console.log(`✅ Auto-created store: ${storeConfig.name}`);
     }
   }
 }
 
 export async function getStores(): Promise<StoreRecord[]> {
+  // Always ensure default stores exist on every call
+  await ensureDefaultStore();
+  
   const stores = await prisma.store.findMany({
     orderBy: { createdAt: 'asc' },
   });
-
-  if (stores.length === 0) {
-    await ensureDefaultStore();
-    const seededStores = await prisma.store.findMany({
-      orderBy: { createdAt: 'asc' },
-    });
-    return seededStores.map(serializeStore);
-  }
 
   return stores.map(serializeStore);
 }
