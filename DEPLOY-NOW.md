@@ -30,25 +30,27 @@ Build output directory: .next
 Node version: 18.17.1 (of hoger)
 ```
 
-### Stap 4: Environment Variables (COPY-PASTE DIT!)
+### Stap 4: Environment Variables
 
-Klik "Add variable" en voeg deze EXACT toe:
+⚠️ **BELANGRIJK**: De credentials staan in `CREDENTIALS.local.md` (lokaal bestand, niet in git)
 
-```
-DATABASE_URL = libsql://order-export-db-albinht.aws-ap-northeast-1.turso.io
+Klik "Add variable" in Cloudflare en kopieer de values uit `CREDENTIALS.local.md`:
 
-DATABASE_AUTH_TOKEN = eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3NjAyOTUwOTMsImlkIjoiZmJkM2Q4ZDUtZDhiOS00YzdkLTk2ZmEtNTk4YTA3MjYzZWM0IiwicmlkIjoiODZjZDc5NTAtNDFjYi00ZDY3LTkyYjktMWIzZGIzOGUwMDM0In0.x06SCkPNcFKaYMLxQ_ZDA_Zpi8oZmJVOlyxH6fUWocPL5fonTZamqLeqn3uc474fBrOR0YaeQSMT_OCG0habAQ
+**Benodigde environment variables:**
+- `DATABASE_URL` - Turso database URL
+- `DATABASE_AUTH_TOKEN` - Turso auth token  
+- `SHOPIFY_TOKEN_MALEN` - Token voor Malen Nach Zahlen Experte store
+- `SHOPIFY_TOKEN_PAINTING` - Token voor Painting Expert store
+- `SHOPIFY_API_VERSION` - Shopify API versie (2025-01)
+- `AUTH_SECRET` - Authentication secret
+- `NEXT_PUBLIC_APP_URL` - Your Cloudflare Pages URL
 
-SHOPIFY_STORE_DOMAIN = malen-nach-zahlen-experte.myshopify.com
+**Multi-Store Support:**
+De applicatie ondersteunt nu **2 stores**:
+- Malen Nach Zahlen Experte (via SHOPIFY_TOKEN_MALEN)
+- Painting Expert (via SHOPIFY_TOKEN_PAINTING)
 
-SHOPIFY_ACCESS_TOKEN = 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
-
-SHOPIFY_API_VERSION = 2025-01
-
-AUTH_SECRET = 9XBFYlKIcCIHSM2oXGYICcCTfne7fst872TlP8M55Dw=
-
-NEXT_PUBLIC_APP_URL = https://shopify-order-export.pages.dev
-```
+Beide stores worden automatisch aangemaakt bij de eerste request!
 
 ### Stap 5: Deploy!
 Klik **"Save and Deploy"**
