@@ -18,11 +18,12 @@ function createPrismaClient() {
     console.log('   AUTH_TOKEN:', databaseAuthToken ? 'SET' : 'NOT SET');
   }
 
-  // Validate database URL
-  if (!databaseUrl) {
-    const errorMsg = 'DATABASE_URL is not set. Please configure DATABASE_URL in your environment variables.';
-    console.error('❌', errorMsg);
-    throw new Error(errorMsg);
+  // During build time, use a dummy database to prevent errors
+  if (process.env.NEXT_PHASE === 'phase-production-build' || !databaseUrl) {
+    console.log('⚠️  Build time or no DATABASE_URL - using dummy connection');
+    return new PrismaClient({
+      datasourceUrl: 'file:./dummy.db',
+    });
   }
 
   // Handle Turso/LibSQL connection
