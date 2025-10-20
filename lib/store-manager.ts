@@ -76,6 +76,16 @@ async function ensureDefaultStore() {
         },
       });
       console.log(`✅ Auto-created store: ${storeConfig.name}`);
+    } else {
+      // Update existing store with correct name and token (ensures stores are always up to date)
+      await prisma.store.update({
+        where: { id: existing.id },
+        data: {
+          name: storeConfig.name,
+          accessToken: accessToken,
+          isActive: true,
+        },
+      });
     }
   }
 }

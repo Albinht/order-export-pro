@@ -47,7 +47,16 @@ async function seedStores() {
         });
         console.log(`✅ Created store: ${store.name}`);
       } else {
-        console.log(`⏭️  Store already exists: ${existingStore.name}`);
+        // Update existing store with correct name and token
+        const updated = await prisma.store.update({
+          where: { id: existingStore.id },
+          data: {
+            name: storeConfig.name,
+            accessToken: accessToken,
+            isActive: true,
+          },
+        });
+        console.log(`✅ Updated store: ${existingStore.name} → ${updated.name}`);
       }
     }
 

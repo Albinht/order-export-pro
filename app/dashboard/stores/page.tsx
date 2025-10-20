@@ -68,7 +68,7 @@ export default function StoresPage() {
       if (response.ok) {
         const data = await response.json();
         // Add mock statistics for demo - using fixed values to avoid hydration issues
-        const enrichedData = data.map((store: StoreData, index: number) => ({
+        const enrichedData = (data.stores || []).map((store: StoreData, index: number) => ({
           ...store,
           isActive: true,
           lastSync: new Date(Date.now() - (index + 1) * 3600000).toISOString(), // Fixed intervals

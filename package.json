@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "build": "prisma generate && next build",
     "build:vercel": "DATABASE_URL='file:./dummy.db' prisma generate && next build",
     "build:cloudflare": "DATABASE_URL='file:./dummy.db' NODE_ENV=production prisma generate && DATABASE_URL='file:./dummy.db' NODE_ENV=production next build && find .next -name '*.pack' -delete && rm -rf .next/cache",
